@@ -48,20 +48,24 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 exports.__esModule = true;
 var pg_1 = require("./pg");
-var mock_dashboardData = {
-    energyOverall: 0,
-    revenueOverall: 0,
-    energyMonthly: 0,
-    revenueMonthly: 0,
-    energyTotalOffPeak: 0,
-    revenueTotalOffPeak: 0,
-    energyTotalOnPeak: 0,
-    revenueTotalOnPeak: 0,
-    realtimePV: 0,
-    yieldToday: 0,
-    consumtionToday: 0,
-    totalCO2: 0
-};
+function EncodeStationStatus(code) {
+    var status;
+    switch (code) {
+        case 1:
+            status = 'Offline';
+            break;
+        case 2:
+            status = 'Faulty';
+            break;
+        case 3:
+            status = 'Online';
+            break;
+        default:
+            status = 'Unknown';
+            break;
+    }
+    return status;
+}
 var get_inverter = (function () { return __awaiter(void 0, void 0, void 0, function () {
     var client, result;
     return __generator(this, function (_a) {
@@ -72,13 +76,52 @@ var get_inverter = (function () { return __awaiter(void 0, void 0, void 0, funct
                 _a.label = 2;
             case 2:
                 _a.trys.push([2, , 4, 5]);
-                return [4 /*yield*/, client.query(" \n        WITH RankedData AS (\n          SELECT\n            active_power,\n            station_code,\n            \"timestamp\",\n            ROW_NUMBER() OVER (PARTITION BY station_code ORDER BY \"timestamp\" DESC) AS RowNum\n          FROM\n            inverter\n        )\n        SELECT\n          SUM(active_power) AS realtime_pv\n        FROM\n          RankedData\n        WHERE\n          RowNum = 1\n        GROUP BY\n          \"timestamp\";\n        ")];
+                return [4 /*yield*/, client.query(" \n        WITH RankedData AS (\n          SELECT\n              active_power AS realtime_pv,\n              station_code,\n              \"timestamp\",\n              ROW_NUMBER() OVER (PARTITION BY station_code ORDER BY \"timestamp\" DESC) AS RowNum\n          FROM\n              inverter\n      )\n      SELECT\n          realtime_pv,\n          station_code,\n          \"timestamp\"\n      FROM\n          RankedData\n      WHERE\n          RowNum = 1;\n        ")];
             case 3:
                 result = _a.sent();
-                result.rows.forEach(function (row) {
-                    row['realtime_pv'] = parseFloat(row['realtime_pv'].toFixed(2));
-                });
-                return [2 /*return*/, result.rows[0]];
+                return [2 /*return*/, result.rows];
+            case 4:
+                client.release();
+                return [7 /*endfinally*/];
+            case 5: return [2 /*return*/];
+        }
+    });
+}); });
+var get_energy = (function () { return __awaiter(void 0, void 0, void 0, function () {
+    var client, result;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, pg_1["default"].connect()];
+            case 1:
+                client = _a.sent();
+                _a.label = 2;
+            case 2:
+                _a.trys.push([2, , 4, 5]);
+                return [4 /*yield*/, client.query(" \n        WITH RankedData AS (\n          SELECT\n              ABS(active_power/1000) AS realtime_grid,\n              station_code,\n              ROW_NUMBER() OVER (PARTITION BY station_code ORDER BY \"timestamp\" DESC) AS RowNum\n          FROM\n              energy\n      )\n      SELECT\n          realtime_grid,\n          station_code\n      FROM\n          RankedData\n      WHERE\n          RowNum = 1;\n        ")];
+            case 3:
+                result = _a.sent();
+                return [2 /*return*/, result.rows];
+            case 4:
+                client.release();
+                return [7 /*endfinally*/];
+            case 5: return [2 /*return*/];
+        }
+    });
+}); });
+var get_inv_energy = (function () { return __awaiter(void 0, void 0, void 0, function () {
+    var client, result;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, pg_1["default"].connect()];
+            case 1:
+                client = _a.sent();
+                _a.label = 2;
+            case 2:
+                _a.trys.push([2, , 4, 5]);
+                return [4 /*yield*/, client.query(" \n        WITH RankedData AS (\n          SELECT\n              ABS(active_power/1000) AS realtime_grid,\n              station_code,\n              ROW_NUMBER() OVER (PARTITION BY station_code ORDER BY \"timestamp\" DESC) AS RowNum\n              FROM\n                  sensor_energy\n          )\n          SELECT\n              realtime_grid,\n              station_code\n          FROM\n              RankedData\n          WHERE\n              RowNum = 1;\n        ")];
+            case 3:
+                result = _a.sent();
+                return [2 /*return*/, result.rows];
             case 4:
                 client.release();
                 return [7 /*endfinally*/];
@@ -96,12 +139,14 @@ var get_stations = (function () { return __awaiter(void 0, void 0, void 0, funct
                 _a.label = 2;
             case 2:
                 _a.trys.push([2, , 4, 5]);
-                return [4 /*yield*/, client.query("  \n          SELECT SUM(day_power) as yield_today,SUM(total_power)/1000 as total_yield  \n          FROM public.stations;\n        ")];
+                return [4 /*yield*/, client.query("  \n          SELECT day_power as yield_today,total_power as total_yield ,real_health_state as station_status ,station_code,station_name,station_address  \n          FROM public.stations;\n        ")];
             case 3:
                 result = _a.sent();
-                result.rows[0].yield_today = parseFloat(result.rows[0].yield_today.toFixed(2));
-                result.rows[0].total_yield = parseFloat(result.rows[0].total_yield.toFixed(2));
-                return [2 /*return*/, result.rows[0]];
+                result.rows.map(function (item, index) {
+                    item.station_status = EncodeStationStatus(item.station_status);
+                    item.station_name_short = item.station_name.includes('รหัส') ? item.station_name.replace(/ รหัส \d+/g, '') : item.station_name;
+                });
+                return [2 /*return*/, result.rows];
             case 4:
                 client.release();
                 return [7 /*endfinally*/];
@@ -119,11 +164,10 @@ var get_stations_year = (function () { return __awaiter(void 0, void 0, void 0, 
                 _a.label = 2;
             case 2:
                 _a.trys.push([2, , 4, 5]);
-                return [4 /*yield*/, client.query("  \n        SELECT SUM(reduction_total_co2) as co2  \n        FROM public.stations_year sy;\n        ")];
+                return [4 /*yield*/, client.query("  \n        SELECT reduction_total_co2 as co2,station_code  \n        FROM public.stations_year sy;\n        ")];
             case 3:
                 result = _a.sent();
-                result.rows[0].co2 = parseFloat(result.rows[0].co2.toFixed(2));
-                return [2 /*return*/, result.rows[0]];
+                return [2 /*return*/, result.rows];
             case 4:
                 client.release();
                 return [7 /*endfinally*/];
@@ -141,31 +185,7 @@ var get_tou = (function () { return __awaiter(void 0, void 0, void 0, function (
                 _a.label = 2;
             case 2:
                 _a.trys.push([2, , 4, 5]);
-                return [4 /*yield*/, client.query("  \n        SELECT\n          SUM(yield_on_peak)AS total_on_peak,\n          SUM(yield_off_peak) AS total_off_peak,\n          SUM(yield_total) AS energy_overall\n        FROM\n          tou t \n        ")];
-            case 3:
-                result = _a.sent();
-                result.rows[0].total_on_peak = parseFloat(result.rows[0].total_on_peak.toFixed(2));
-                result.rows[0].total_off_peak = parseFloat(result.rows[0].total_off_peak.toFixed(2));
-                result.rows[0].energy_overall = parseFloat(result.rows[0].energy_overall.toFixed(2));
-                return [2 /*return*/, result.rows[0]];
-            case 4:
-                client.release();
-                return [7 /*endfinally*/];
-            case 5: return [2 /*return*/];
-        }
-    });
-}); });
-var get_config = (function () { return __awaiter(void 0, void 0, void 0, function () {
-    var client, result;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0: return [4 /*yield*/, pg_1["default"].connect()];
-            case 1:
-                client = _a.sent();
-                _a.label = 2;
-            case 2:
-                _a.trys.push([2, , 4, 5]);
-                return [4 /*yield*/, client.query("  \n        SELECT value_name, value, data_type, \"expression\", group_name\n        FROM config;\n        ")];
+                return [4 /*yield*/, client.query("  \n        SELECT\n          station_code,\n          SUM(yield_total) AS energy,\n          SUM(revenue) AS revenue\n        FROM\n          tou t \n        GROUP BY\n          station_code;\n        ")];
             case 3:
                 result = _a.sent();
                 return [2 /*return*/, result.rows];
@@ -176,30 +196,8 @@ var get_config = (function () { return __awaiter(void 0, void 0, void 0, functio
         }
     });
 }); });
-var get_billing = function (yield_on_peak, yield_off_peak, config) {
-    function execution(config, valueName) {
-        var findConfig = config.find(function (item) { return item.value_name === valueName; });
-        if (findConfig && findConfig.expression !== null) {
-            var result = parseFloat((eval(findConfig.expression)).toFixed(2));
-            return result;
-        }
-        else {
-            var result = parseFloat(findConfig.value);
-            return result;
-        }
-    }
-    var e_rate_on = execution(config, 'e_rate_on');
-    var e_rate_off = execution(config, 'e_rate_off');
-    var dsc = execution(config, 'dsc');
-    var ead_on = execution(config, 'ead_on');
-    var ead_off = execution(config, 'ead_off');
-    var revenue_on = execution(config, 'revenue_on');
-    var revenue_off = execution(config, 'revenue_off');
-    var revenue_total = execution(config, 'revenue_total');
-    return { revenue_total: revenue_total, revenue_on: revenue_on, revenue_off: revenue_off };
-};
 var get_data = (function () { return __awaiter(void 0, void 0, void 0, function () {
-    var inverter, stations, stations_y, tou, config, billing, combinedData;
+    var inverter, stations, _stations_y, energy, inv_energy, tou, stations_y, mapArr2, mapArr3, mapArr4, mapArr5, mapArr6, combinedData;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0: return [4 /*yield*/, get_inverter()];
@@ -210,15 +208,50 @@ var get_data = (function () { return __awaiter(void 0, void 0, void 0, function 
                 stations = _a.sent();
                 return [4 /*yield*/, get_stations_year()];
             case 3:
-                stations_y = _a.sent();
-                return [4 /*yield*/, get_tou()];
+                _stations_y = _a.sent();
+                return [4 /*yield*/, get_energy()];
             case 4:
-                tou = _a.sent();
-                return [4 /*yield*/, get_config()];
+                energy = _a.sent();
+                return [4 /*yield*/, get_inv_energy()];
             case 5:
-                config = _a.sent();
-                billing = get_billing(tou.total_on_peak, tou.total_off_peak, config);
-                combinedData = __assign(__assign(__assign(__assign(__assign({}, inverter), stations), stations_y), tou), billing);
+                inv_energy = _a.sent();
+                return [4 /*yield*/, get_tou()];
+            case 6:
+                tou = _a.sent();
+                stations_y = _stations_y.reduce(function (acc, entry) {
+                    var existingEntry = acc.find(function (item) { return item.station_code === entry.station_code; });
+                    if (existingEntry) {
+                        existingEntry.co2 += entry.co2;
+                    }
+                    else {
+                        acc.push({ "co2": entry.co2, "station_code": entry.station_code });
+                    }
+                    return acc;
+                }, []);
+                mapArr2 = stations.reduce(function (acc, entry) {
+                    acc[entry.station_code] = entry;
+                    return acc;
+                }, {});
+                mapArr3 = stations_y.reduce(function (acc, entry) {
+                    acc[entry.station_code] = entry;
+                    return acc;
+                }, {});
+                mapArr4 = energy.reduce(function (acc, entry) {
+                    acc[entry.station_code] = entry;
+                    return acc;
+                }, {});
+                mapArr5 = inv_energy.reduce(function (acc, entry) {
+                    acc[entry.station_code] = entry;
+                    return acc;
+                }, {});
+                mapArr6 = tou.reduce(function (acc, entry) {
+                    acc[entry.station_code] = entry;
+                    return acc;
+                }, {});
+                combinedData = inverter.map(function (entry) { return (__assign(__assign(__assign(__assign(__assign(__assign({}, entry), mapArr2[entry.station_code]), mapArr3[entry.station_code]), mapArr4[entry.station_code]), mapArr5[entry.station_code]), mapArr6[entry.station_code])); });
+                combinedData.map(function (item, index) {
+                    item.realtime_load = parseFloat((item.realtime_grid + item.realtime_pv).toFixed(3));
+                });
                 return [2 /*return*/, combinedData];
         }
     });
@@ -236,8 +269,6 @@ function handler(req, res) {
                     return [4 /*yield*/, get_data()];
                 case 2:
                     payload = _a.sent();
-                    ;
-                    //console.log(payload);
                     res.status(200).json(payload);
                     return [3 /*break*/, 4];
                 case 3:

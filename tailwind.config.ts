@@ -20,15 +20,16 @@ const config: Config = {
     themes: ["light", "dark", "cupcake", 
       {
         mytheme: {
-          "primary": "#3b82f6", 
-          "secondary": "#ffffff",       
+          "primary": "#3880d5", 
+          "secondary": "#23b00a",       
           "accent": "#ffffff",       
           "neutral": "#ffffff",      
           "base-100": "#ffffff",    
           "info": "#ffffff",    
-          "success": "#34d399",     
+          "success": "#1ec4ba",     
           "warning": "#ffffff",      
-          "error": "#ffffff"
+          "error": "#ffffff",
+          
         }
       },
     ],

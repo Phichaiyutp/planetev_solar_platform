@@ -1,5 +1,6 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import pool from '../../db';
+import { NextApiRequest, NextApiResponse } from 'next';
+import pool from './pg';
+
 
 interface OverallItem {
   energyOverall : number;
@@ -55,7 +56,7 @@ const get_inverter = (async () => {
           "timestamp";
         `); 
     result.rows.forEach(row => {
-      row['realtime_pv'] = parseFloat(row['realtime_pv'].toFixed(3));
+      row['realtime_pv'] = parseFloat(row['realtime_pv'].toFixed(2));
     });
     return result.rows[0];
   } finally {
@@ -70,6 +71,8 @@ const get_stations = (async () => {
           SELECT SUM(day_power) as yield_today,SUM(total_power)/1000 as total_yield  
           FROM public.stations;
         `);
+    result.rows[0].yield_today = parseFloat(result.rows[0].yield_today.toFixed(2))
+    result.rows[0].total_yield = parseFloat(result.rows[0].total_yield.toFixed(2))
     return result.rows[0];
   } finally {
     client.release();
@@ -78,11 +81,12 @@ const get_stations = (async () => {
 const get_stations_year = (async () => {
   const client = await pool.connect();
   try {
-    const result = await client.query(
+    let result = await client.query(
         `  
         SELECT SUM(reduction_total_co2) as co2  
         FROM public.stations_year sy;
         `);
+    result.rows[0].co2 = parseFloat(result.rows[0].co2.toFixed(2))
     return result.rows[0];
   } finally {
     client.release();

@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import pool from '../../db';
+import pool from './pg';
 
-function EncodePlantStatus(code: number):string{
+function EncodeStationStatus(code: number):string{
   let status:string
   switch (code) {
     case 1:
@@ -105,11 +105,12 @@ const get_stations = (async () => {
   try {
     let result = await client.query(
         `  
-          SELECT day_power as yield_today,total_power as total_yield ,real_health_state as plant_status ,station_code  
+          SELECT day_power as yield_today,total_power as total_yield ,real_health_state as station_status ,station_code,station_name,station_address  
           FROM public.stations;
         `);
         result.rows.map((item,index)=>{
-          item.plant_status = EncodePlantStatus(item.plant_status)
+          item.station_status = EncodeStationStatus(item.station_status)
+          item.station_name_short = item.station_name.includes('รหัส') ? item.station_name.replace(/ รหัส \d+/g, '') : item.station_name;
         })
     return result.rows;
   } finally {
@@ -135,13 +136,13 @@ const get_tou = (async () => {
     const result = await client.query(
         `  
         SELECT
-          site_id AS station_code,
+          station_code,
           SUM(yield_total) AS energy,
           SUM(revenue) AS revenue
         FROM
-            tou t 
+          tou t 
         GROUP BY
-            site_id;
+          station_code;
         `);
     return result.rows;
   } finally {
@@ -207,6 +208,7 @@ const get_data = ( async () => {
   })
   return combinedData;
 })
+
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {

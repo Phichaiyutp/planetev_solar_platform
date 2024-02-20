@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import pool from './pg';
+import pool from '@/db/pg';
 
 
 interface OverallItem {

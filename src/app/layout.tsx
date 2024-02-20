@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -17,7 +18,6 @@ export default function RootLayout({
   return (
     <html data-theme="mytheme" lang="en">
       <body className={inter.className}>
-      <div className="fixed top-0 left-0 w-full bg-success h-4 z-50"></div>
         {children}
       </body>
     </html>

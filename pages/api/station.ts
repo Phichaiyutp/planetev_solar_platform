@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import pool from './pg';
+import pool from '@/db/pg';
 
 function EncodeStationStatus(code: number):string{
   let status:string
@@ -19,6 +19,121 @@ function EncodeStationStatus(code: number):string{
   }
   return status;
 }
+
+function EncodeWeatherCondition(code: number):string{
+  let status:string
+  switch (code) {
+    case 1:
+      status = 'Clear'
+      break;
+    case 2:
+      status = 'Partly cloudy'
+      break;
+    case 3:
+      status = 'Cloudy'
+      break;
+    case 4:
+      status = 'Overcast'
+      break;
+    case 5:
+      status = 'Light rain'
+      break;
+    case 6:
+      status = 'Moderate rain'
+      break;
+    case 7:
+      status = 'Heavy rain'
+      break;
+    case 8:
+      status = 'Thunderstorm'
+      break;
+    case 9:
+      status = 'Very cold'
+      break;
+    case 10:
+      status = 'Cold'
+      break;
+    case 11:
+      status = 'Cool'
+      break;
+    case 12:
+      status = 'Very hot'
+      break;
+    default:
+      status = 'Unknown'
+      break;
+  }
+  return status;
+}
+
+interface weatherItem {
+  url?:string;
+  lat:number;
+  lon:number;
+  duration:number;
+}
+
+const weather = async (param: weatherItem) => {
+  const endpoint = param.url ? param.url : 'https://data.tmd.go.th/nwpapi/v1/forecast/location/hourly/at';
+  const url = `${endpoint}?lat=${param.lat}&lon=${param.lon}&duration=${param.duration}`;
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${process.env.TMD_API_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      next: { revalidate: 60 }
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
+
+
+const get_lat_long = (async () => {
+  const client = await pool.connect();
+  try {
+    const result = await client.query(
+        ` 
+        SELECT latitude, longitude, station_code
+        FROM ms_stations;
+        `);    
+    return result.rows;
+  } finally {
+    client.release();
+  }  
+})
+
+const get_weather: () => Promise<any[]> = async () => {
+  try {
+    let lat_long = await get_lat_long();
+    if (lat_long) {
+      for (const item of lat_long) {
+        const param = {
+          lat: item.latitude,
+          lon: item.longitude,
+          duration: 1
+        };
+        const weather_data = await weather(param);
+        if (weather_data.WeatherForecasts[0].forecasts[0].data) {
+          item.cond = EncodeWeatherCondition(Number(weather_data.WeatherForecasts[0].forecasts[0].data.cond));
+          item.cond_id = Number(weather_data.WeatherForecasts[0].forecasts[0].data.cond);
+          item.rh = weather_data.WeatherForecasts[0].forecasts[0].data.rh;
+          item.tc = weather_data.WeatherForecasts[0].forecasts[0].data.tc;
+        }
+      }
+    }
+    return lat_long || []; 
+  } catch (error) {
+    console.error(error);
+    return []; 
+  }
+};
+
+
 
 const get_inverter = (async () => {
   const client = await pool.connect();
@@ -48,6 +163,7 @@ const get_inverter = (async () => {
     client.release();
   }  
 }) 
+
 const get_energy = (async () => {
   const client = await pool.connect();
   try {
@@ -122,8 +238,9 @@ const get_stations_year = (async () => {
   try {
     const result = await client.query(
         `  
-        SELECT reduction_total_co2 as co2,station_code  
-        FROM public.stations_year sy;
+        SELECT SUM(reduction_total_co2) AS co2, station_code
+        FROM public.stations_year
+        GROUP BY station_code;        
         `);
     return result.rows;
   } finally {
@@ -152,22 +269,11 @@ const get_tou = (async () => {
 const get_data = ( async () => {
   const inverter = await get_inverter();
   const stations = await get_stations(); 
-  const _stations_y = await get_stations_year(); 
+  const stations_y = await get_stations_year(); 
   const energy = await get_energy();
   const inv_energy = await get_inv_energy();
   const tou = await get_tou();
-  
-
-  const stations_y = _stations_y.reduce((acc, entry) => {
-    const existingEntry = acc.find((item: { station_code: any; }) => item.station_code === entry.station_code);
-    if (existingEntry) {
-        existingEntry.co2 += entry.co2;
-    } else {
-        acc.push({ "co2": entry.co2, "station_code": entry.station_code });
-    }
-    return acc;
-  }, []);
-
+  const weather = await get_weather();
 
   const mapArr2 = stations.reduce((acc, entry) => {
     acc[entry.station_code] = entry;
@@ -194,6 +300,11 @@ const get_data = ( async () => {
     return acc;
   }, {});
 
+  const mapArr7 = weather.reduce((acc: { [x: string]: any; }, entry: { station_code: string | number; }) => {
+    acc[entry.station_code] = entry;
+    return acc;
+  }, {});
+
   let combinedData = inverter.map(entry => ({
     ...entry,
     ...mapArr2[entry.station_code],
@@ -201,6 +312,7 @@ const get_data = ( async () => {
     ...mapArr4[entry.station_code],
     ...mapArr5[entry.station_code],
     ...mapArr6[entry.station_code],
+    ...mapArr7[entry.station_code],
   }));
 
   combinedData.map((item,index)=>{

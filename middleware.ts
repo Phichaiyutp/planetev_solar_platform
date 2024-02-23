@@ -56,11 +56,11 @@ export async function middleware(request: NextRequest) {
         }
       } catch (error) {
         console.log('Error during token refresh:', error);
-        return NextResponse.redirect(new URL('/login', request.url));
+        return NextResponse.redirect(new URL(`${process.env.NEXT_PUBLIC_BASE_PATH}/login`, request.url));
       }
     } else {
       console.error('JWT verification error:', error);
-      return NextResponse.redirect(new URL('/login', request.url));
+      return NextResponse.redirect(new URL(`${process.env.NEXT_PUBLIC_BASE_PATH}/login`, request.url));
     }
   }
 }

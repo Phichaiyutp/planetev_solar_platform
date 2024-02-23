@@ -1,26 +1,26 @@
-ARG NODE=node:18-alpine
-
 # Stage 1: Install dependencies
-FROM ${NODE} AS deps
+FROM node:18-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
+RUN npm install -g npm@10.4.0
 COPY package.json yarn.lock* ./
-RUN yarn --frozen-lockfile
+RUN npm install
 
 # Stage 2: Build the app
-FROM ${NODE} AS builder
+FROM node:18-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN yarn build
+RUN npm run build
 
 # Stage 3: Run the production
-FROM ${NODE} AS runner
+FROM node:18-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
+ENV NEXT_SHARP_PATH /app/node_modules/sharp
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs

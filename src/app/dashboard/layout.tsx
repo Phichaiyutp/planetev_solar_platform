@@ -21,13 +21,13 @@ export default function RootLayout({
       </div>
       <div className="drawer-side">
       <label htmlFor="my-drawer-2" aria-label="close sidebar" className="drawer-overlay"></label> 
-      <div className="menu px-4 w-auto h-full bg-base-100 text-base-content border-r-[2px] border-success">
-        <div className="flex flex-col">
+      <div className="menu px-4 h-[100vh] w-11/12 sm:w-8/12 lg:w-5/6 xl:w-11/12  bg-base-100 text-base-content border-r-[2px] border-success overflow-auto">
+        <div className="flex flex-col w-11/12 sm:w-full">
           <div className="flex items-start justify-center my-4">
             <Image
-              src="/logo.png"
-              width={384/2}
-              height={216/2}
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH}/logo.png`}
+              width={227}
+              height={128}
               alt="Picture of the author"
             />
           </div>
@@ -36,7 +36,7 @@ export default function RootLayout({
           <div className="bg-success h-[2px] w-[90%] mx-auto"></div>
           <div className="mx-4 p-4"><ExportReport /></div>
           <div className="bg-success h-[2px] w-[90%] mx-auto"></div>
-          <div className="pl-12"><Logout /></div>
+          <div className="mx-4 pl-8"><Logout /></div>
         </div>
       </div>
       </div>

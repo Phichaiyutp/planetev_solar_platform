@@ -15,7 +15,20 @@ export async function GetUuserInfo(): Promise<any> {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${access_token}`
-        }
+        },
+        next: { revalidate: 10 }
+      });
+      const data = await response.json();
+      return data
+    } catch (error) {
+      return error
+    }
+  }
+
+  export async function GetTime(): Promise<any> {
+    try {
+      const response = await fetch('http://192.168.100.77:2000/gettime', {
+        next: { revalidate: 1 },
       });
       const data = await response.json();
       return data

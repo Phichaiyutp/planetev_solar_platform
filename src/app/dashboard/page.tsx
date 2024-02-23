@@ -1,13 +1,13 @@
 import Image from "next/image";
-import {GetUuserInfo} from './action'
+import {GetUuserInfo,GetTime} from './action'
 import {TotalEnergyChart,StationInfo} from "@/components/dashboard/station";
 import { EnergyOverall, RevenueOverall, Monthly, 
   TotalOffPeak,TotalOnPeak,RealtimePV,
   YieldToday,ConsumpionToday,TotalCo2 } from "@/components/dashboard/overall";
 
+
 export default async  function Home() {
   const user = await GetUuserInfo();
-  console.log(user.username)
   return (
     <div className=" m-6 grid grid-cols-2 lg:grid-cols-8 gap-4">
       <label htmlFor="my-drawer-2" className="btn btn-primary btn-xs drawer-button col-span-2 lg:hidden">=</label>

@@ -1,9 +1,11 @@
 "use client"
+import { useRouter } from 'next/navigation'
 import Image from "next/image";
 import React, { useState } from 'react';
-import LoginAction from '../../app/login/action';
+import LoginAction from '@/app/login/action';
 
 const LoginForm = () => {
+  const router = useRouter();
   const [user, setUser] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -17,17 +19,24 @@ const LoginForm = () => {
     }
 
     try {
-      LoginAction(user,password)
+      const loginResult = await LoginAction(user,password)
+      if (loginResult?.error) {
+        setError(loginResult.error);
+        setPassword('');
+      } else if (loginResult?.success) {
+        router.push('/dashboard');
+      }
     } catch (error) {
+      console.log(error)
       setError('Login failed. Please check your credentials.');
     }
   };
 
   return (
-    <div className="w-full sm:w-8/12 md:w-6/12 lg:w-5/12 2xl:w-4/12 p-6 sm:p-10 bg-white rounded-lg shadow-md lg:shadow-lg">
+    <div className="w-10/12 sm:w-8/12 md:w-6/12 lg:w-5/12 2xl:w-4/12 p-6 sm:p-10 bg-white rounded-lg shadow-md lg:shadow-lg">
        <div className="flex items-start justify-center my-4">
         <Image
-            src="/logo.png"
+            src={`${process.env.NEXT_PUBLIC_BASE_PATH}/logo.png`}
             width={384/2}
             height={216/2}
             alt="Picture of the author"
@@ -42,7 +51,7 @@ const LoginForm = () => {
           name="text"
           value={user}
           onChange={(e) => setUser(e.target.value)}
-          placeholder="e-mail address"
+          placeholder="user name"
           autoComplete="text"
           className="block w-full py-3 px-1 mt-2 text-gray-800 border-b-2 border-gray-100 focus:border-gray-500 focus:outline-none"
           required
@@ -68,11 +77,6 @@ const LoginForm = () => {
           Login
         </button>
 
-        <div className="sm:flex sm:flex-wrap mt-8 sm:mb-4 text-sm text-center">
-          <a href="#" className="flex-2 underline">Forgot password?</a>
-          <p className="flex-1 text-gray-500 text-md mx-4 my-1 sm:my-auto">or</p>
-          <a href="#" className="flex-2 underline">Create an Account</a>
-        </div>
       </form>
     </div>
   );

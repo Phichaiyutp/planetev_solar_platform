@@ -34,13 +34,13 @@ interface OverallItem {
 }
 
 export  async function GetStationData(): Promise<StationItem[]> {
-const res = await fetch(`/api/station`,{ next: { revalidate: 3600 } });
+const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/station`,{ next: { revalidate: 3600 } });
 const data = await res.json();
 return data;
 }
 
 export  async function GetOverallData(): Promise<OverallItem> {
-  const res = await fetch(`/api/overall`,{ next: { revalidate: 3600 } });
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/overall`,{ next: { revalidate: 3600 } });
   const data = await res.json();
   return data;
   }

@@ -209,9 +209,10 @@ exports.StationInfo = function () {
 };
 exports.ExportReport = function () {
     var stations = FetchData();
-    var _a = react_1.useState(null), selectedYear = _a[0], setSelectedYear = _a[1];
-    var _b = react_1.useState(null), selectedMonth = _b[0], setSelectedMonth = _b[1];
-    var _c = react_1.useState(""), selectedStation = _c[0], setSelectedStation = _c[1];
+    var _a = react_1.useState(false), downloading = _a[0], setDownloading = _a[1];
+    var _b = react_1.useState(null), selectedYear = _b[0], setSelectedYear = _b[1];
+    var _c = react_1.useState(null), selectedMonth = _c[0], setSelectedMonth = _c[1];
+    var _d = react_1.useState(""), selectedStation = _d[0], setSelectedStation = _d[1];
     var handleDateChange = function (date) {
         if (moment_1["default"].isMoment(date) && date.isValid()) {
             setSelectedYear(date.year());
@@ -236,14 +237,44 @@ exports.ExportReport = function () {
     var handleStationChange = function (event) {
         setSelectedStation(event.target.value);
     };
-    var handleSubmit = function () {
-        // Construct URL for download
-        var hostReport = process.env.NEXT_PUBLIC_HOST_REPORT || "localhost";
-        var url = hostReport + "/" + selectedStation + "?year=" + selectedYear + "&month=" + selectedMonth;
-        console.log(url);
-        // Trigger download
-        window.open(url, "_blank");
-    };
+    var handleSubmit = function () { return __awaiter(void 0, void 0, void 0, function () {
+        var response, blob, url, link, error_2;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 5, 6, 7]);
+                    setDownloading(true);
+                    return [4 /*yield*/, fetch(process.env.NEXT_PUBLIC_BASE_PATH + "/api/report?selectedStation=" + selectedStation + "&selectedYear=" + selectedYear + "&selectedMonth=" + selectedMonth)];
+                case 1:
+                    response = _a.sent();
+                    if (!response.ok) return [3 /*break*/, 3];
+                    return [4 /*yield*/, response.blob()];
+                case 2:
+                    blob = _a.sent();
+                    url = window.URL.createObjectURL(blob);
+                    link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', "bill_" + new Date().toISOString().split('T')[0] + ".xlsx");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
+                    return [3 /*break*/, 4];
+                case 3:
+                    console.error('Failed to fetch Excel file:', response.statusText);
+                    _a.label = 4;
+                case 4: return [3 /*break*/, 7];
+                case 5:
+                    error_2 = _a.sent();
+                    console.error('Error exporting Excel file:', error_2);
+                    return [3 /*break*/, 7];
+                case 6:
+                    setDownloading(false);
+                    return [7 /*endfinally*/];
+                case 7: return [2 /*return*/];
+            }
+        });
+    }); };
     return (react_1["default"].createElement("div", { className: "flex flex-col text-base" },
         react_1["default"].createElement("p", { className: "font-bold text-xl text-success" }, "Report/Billing"),
         react_1["default"].createElement("p", { className: "pt-4" }, "Year / Month"),
@@ -256,5 +287,7 @@ exports.ExportReport = function () {
         react_1["default"].createElement("select", { className: "select select-bordered ml-4 mt-4 w-full max-w-60", value: selectedStation, onChange: handleStationChange },
             react_1["default"].createElement("option", { value: "", disabled: true }, "Please select a plant"),
             stations.map(function (station) { return (react_1["default"].createElement("option", { key: station.station_code, value: station.station_code }, station.station_name)); })),
-        react_1["default"].createElement("button", { className: "btn btn-success btn-md ml-4 mt-4 w-full max-w-60 text-white text-lg font-bold", onClick: handleSubmit }, "Submit")));
+        react_1["default"].createElement("button", { className: "btn btn-success btn-md ml-4 mt-4 w-full max-w-60 text-white text-lg font-bold" + (downloading ? ' disabled' : ''), onClick: handleSubmit, disabled: downloading }, downloading ? (react_1["default"].createElement(react_1["default"].Fragment, null,
+            react_1["default"].createElement("span", { className: "loading loading-spinner" }),
+            "Loading...")) : ('Submit'))));
 };

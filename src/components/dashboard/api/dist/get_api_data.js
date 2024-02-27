@@ -1,4 +1,3 @@
-'use server';
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -37,47 +36,38 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-var headers_1 = require("next/headers");
-var LoginAction = function (user, password) { return __awaiter(void 0, void 0, Promise, function () {
-    var hostAuth, hostPortAuth, url, response, data, error_1;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0:
-                _a.trys.push([0, 3, , 4]);
-                hostAuth = process.env.NEXT_PUBLIC_HOST_AUTH || 'localhost';
-                hostPortAuth = process.env.NEXT_PUBLIC_HOST_PORT_AUTH || 5001;
-                url = "http://" + hostAuth + ":" + hostPortAuth + "/login";
-                return [4 /*yield*/, fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ username: user, password: password }),
-                        timeout: 10000
-                    })];
-            case 1:
-                response = _a.sent();
-                if (!response.ok) {
-                    throw new Error('Failed to authenticate. Please try again.');
-                }
-                return [4 /*yield*/, response.json()];
-            case 2:
-                data = _a.sent();
-                if (data.error) {
-                    return [2 /*return*/, { error: data.error }];
-                }
-                else if (data.status === 'ok') {
-                    headers_1.cookies().set('access_token', data.access_token);
-                    headers_1.cookies().set('refresh_token', data.refresh_token);
-                    return [2 /*return*/, { success: true }];
-                }
-                return [3 /*break*/, 4];
-            case 3:
-                error_1 = _a.sent();
-                console.error('Login failed:', error_1);
-                return [2 /*return*/, { error: 'Login failed. Please check your credentials.' }];
-            case 4: return [2 /*return*/, { error: 'Login failed. Please check your credentials.' }];
-        }
+exports.GetOverallData = exports.GetStationData = void 0;
+function GetStationData() {
+    return __awaiter(this, void 0, Promise, function () {
+        var res, data;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, fetch(process.env.NEXT_PUBLIC_BASE_PATH + "/api/station", { next: { revalidate: 3600 } })];
+                case 1:
+                    res = _a.sent();
+                    return [4 /*yield*/, res.json()];
+                case 2:
+                    data = _a.sent();
+                    return [2 /*return*/, data];
+            }
+        });
     });
-}); };
-exports["default"] = LoginAction;
+}
+exports.GetStationData = GetStationData;
+function GetOverallData() {
+    return __awaiter(this, void 0, Promise, function () {
+        var res, data;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, fetch(process.env.NEXT_PUBLIC_BASE_PATH + "/api/overall", { next: { revalidate: 3600 } })];
+                case 1:
+                    res = _a.sent();
+                    return [4 /*yield*/, res.json()];
+                case 2:
+                    data = _a.sent();
+                    return [2 /*return*/, data];
+            }
+        });
+    });
+}
+exports.GetOverallData = GetOverallData;

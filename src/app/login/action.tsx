@@ -11,7 +11,6 @@ const LoginAction = async (user: string, password: string): Promise<LoginResult>
     const hostAuth = process.env.NEXT_PUBLIC_HOST_AUTH || 'localhost';
     const hostPortAuth = process.env.NEXT_PUBLIC_HOST_PORT_AUTH || 5001;
     const url = `http://${hostAuth}:${hostPortAuth}/login`;
-    console.log(url)
     const response = await fetch(url, {
       method: 'POST',
       headers: {

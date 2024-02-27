@@ -238,6 +238,7 @@ export const StationInfo: React.FC = () => {
 
 export const ExportReport: React.FC = () => {
   const stations = FetchData();
+  const [downloading, setDownloading] = useState(false);
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [selectedStation, setSelectedStation] = useState<string>("");
@@ -266,13 +267,28 @@ export const ExportReport: React.FC = () => {
     setSelectedStation(event.target.value);
   };
 
-  const handleSubmit = () => {
-    // Construct URL for download
-    const hostReport = process.env.NEXT_PUBLIC_HOST_REPORT || "localhost";
-    const url = `${hostReport}/${selectedStation}?year=${selectedYear}&month=${selectedMonth}`;
-    console.log(url);
-    // Trigger download
-    window.open(url, "_blank");
+  const handleSubmit = async  () => {
+    try {
+      setDownloading(true);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/report?selectedStation=${selectedStation}&selectedYear=${selectedYear}&selectedMonth=${selectedMonth}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `bill_${new Date().toISOString().split('T')[0]}.xlsx`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } else {
+        console.error('Failed to fetch Excel file:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error exporting Excel file:', error);
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -311,10 +327,18 @@ export const ExportReport: React.FC = () => {
         ))}
       </select>
       <button
-        className="btn btn-success btn-md ml-4 mt-4 w-full max-w-60 text-white text-lg font-bold"
+        className={`btn btn-success btn-md ml-4 mt-4 w-full max-w-60 text-white text-lg font-bold${downloading ? ' disabled' : ''}`}
         onClick={handleSubmit}
+        disabled={downloading}
       >
-        Submit
+        {downloading ? (
+          <>
+            <span className="loading loading-spinner"></span>
+            Loading...
+          </>
+        ) : (
+          'Submit'
+        )}
       </button>
     </div>
   );

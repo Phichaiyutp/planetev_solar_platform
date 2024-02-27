@@ -1,4 +1,3 @@
-'use server';
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -37,47 +36,56 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-var headers_1 = require("next/headers");
-var LoginAction = function (user, password) { return __awaiter(void 0, void 0, Promise, function () {
-    var hostAuth, hostPortAuth, url, response, data, error_1;
+var report = function (selectedStation, selectedYear, selectedMonth) { return __awaiter(void 0, void 0, void 0, function () {
+    var hostReport, portReport, response, data, error_1;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 _a.trys.push([0, 3, , 4]);
-                hostAuth = process.env.NEXT_PUBLIC_HOST_AUTH || 'localhost';
-                hostPortAuth = process.env.NEXT_PUBLIC_HOST_PORT_AUTH || 5001;
-                url = "http://" + hostAuth + ":" + hostPortAuth + "/login";
-                return [4 /*yield*/, fetch(url, {
-                        method: 'POST',
+                hostReport = process.env.NEXT_PUBLIC_HOST_REPORT || "planetev_report";
+                portReport = process.env.NEXT_PUBLIC_HOST_PORT_REPORT || 5000;
+                return [4 /*yield*/, fetch("http://" + hostReport + ":" + portReport + "/download/xlsx/" + selectedStation + "?year=" + selectedYear + "&month=" + selectedMonth, {
+                        method: 'GET',
                         headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ username: user, password: password }),
-                        timeout: 10000
+                            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                        }
                     })];
             case 1:
                 response = _a.sent();
-                if (!response.ok) {
-                    throw new Error('Failed to authenticate. Please try again.');
-                }
-                return [4 /*yield*/, response.json()];
+                return [4 /*yield*/, response.arrayBuffer()];
             case 2:
                 data = _a.sent();
-                if (data.error) {
-                    return [2 /*return*/, { error: data.error }];
-                }
-                else if (data.status === 'ok') {
-                    headers_1.cookies().set('access_token', data.access_token);
-                    headers_1.cookies().set('refresh_token', data.refresh_token);
-                    return [2 /*return*/, { success: true }];
-                }
-                return [3 /*break*/, 4];
+                return [2 /*return*/, data];
             case 3:
                 error_1 = _a.sent();
-                console.error('Login failed:', error_1);
-                return [2 /*return*/, { error: 'Login failed. Please check your credentials.' }];
-            case 4: return [2 /*return*/, { error: 'Login failed. Please check your credentials.' }];
+                console.error('Error:', error_1);
+                return [2 /*return*/, null];
+            case 4: return [2 /*return*/];
         }
     });
 }); };
-exports["default"] = LoginAction;
+exports["default"] = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, selectedStation, selectedYear, selectedMonth, reportData;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                _a = req.query, selectedStation = _a.selectedStation, selectedYear = _a.selectedYear, selectedMonth = _a.selectedMonth;
+                if (!selectedStation || !selectedYear || !selectedMonth) {
+                    res.status(400).json({ error: 'Missing parameters' });
+                    return [2 /*return*/];
+                }
+                return [4 /*yield*/, report(selectedStation, selectedYear, selectedMonth)];
+            case 1:
+                reportData = _b.sent();
+                if (reportData) {
+                    res.setHeader('Content-Disposition', 'attachment; filename="report.xlsx"');
+                    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                    res.status(200).send(Buffer.from(reportData));
+                }
+                else {
+                    res.status(500).json({ error: 'Internal server error' });
+                }
+                return [2 /*return*/];
+        }
+    });
+}); });

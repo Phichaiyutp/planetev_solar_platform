@@ -1,3 +1,4 @@
+'use client';
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -36,38 +37,41 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.GetOverallData = exports.GetStationData = void 0;
-function GetStationData() {
-    return __awaiter(this, void 0, Promise, function () {
-        var res, data;
+var react_1 = require("react");
+var image_1 = require("next/image");
+var link_1 = require("next/link");
+var LineLogin = function () {
+    var handleClick = function () { return __awaiter(void 0, void 0, void 0, function () {
+        var redirect_uri, queryParams, authorizationUrl;
         return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, fetch(process.env.NEXT_PUBLIC_BASE_PATH + "/api/dashboard/station", { next: { revalidate: 3600 } })];
-                case 1:
-                    res = _a.sent();
-                    return [4 /*yield*/, res.json()];
-                case 2:
-                    data = _a.sent();
-                    return [2 /*return*/, data];
+            try {
+                redirect_uri = process.env.NEXT_PUBLIC_LINE_REDIRECT_URL + "/solar/notify/callback";
+                queryParams = new URLSearchParams({
+                    response_type: 'code',
+                    client_id: process.env.NEXT_PUBLIC_LINE_CLIENT_ID || '',
+                    redirect_uri: redirect_uri,
+                    scope: 'notify',
+                    state: '{state}'
+                });
+                authorizationUrl = "https://notify-bot.line.me/oauth/authorize?" + queryParams;
+                window.location.href = authorizationUrl;
             }
-        });
-    });
-}
-exports.GetStationData = GetStationData;
-function GetOverallData() {
-    return __awaiter(this, void 0, Promise, function () {
-        var res, data;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, fetch(process.env.NEXT_PUBLIC_BASE_PATH + "/api/dashboard/overall", { next: { revalidate: 3600 } })];
-                case 1:
-                    res = _a.sent();
-                    return [4 /*yield*/, res.json()];
-                case 2:
-                    data = _a.sent();
-                    return [2 /*return*/, data];
+            catch (error) {
+                console.error('Error occurred while requesting authorization:', error);
             }
+            return [2 /*return*/];
         });
-    });
-}
-exports.GetOverallData = GetOverallData;
+    }); };
+    return (react_1["default"].createElement("div", { className: "card w-full md:w-96 bg-base-100 shadow-xl" },
+        react_1["default"].createElement(link_1["default"], { href: "/dashboard", className: 'mt-4 mr-4 place-self-end' },
+            react_1["default"].createElement("button", { className: "btn btn-square" },
+                react_1["default"].createElement("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-6 w-6", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor" },
+                    react_1["default"].createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: "2", d: "M6 18L18 6M6 6l12 12" })))),
+        react_1["default"].createElement("figure", { className: "px-10 pt-10" },
+            react_1["default"].createElement(image_1["default"], { src: process.env.NEXT_PUBLIC_BASE_PATH + "/line_notify.png", width: 100, height: 100, className: "rounded-xl", alt: 'Line notify' })),
+        react_1["default"].createElement("div", { className: "card-body items-center text-center" },
+            react_1["default"].createElement("h2", { className: "card-title" }, "LINE Notify Login"),
+            react_1["default"].createElement("div", { className: "card-actions" },
+                react_1["default"].createElement("button", { className: "btn btn-secondary text-white", onClick: handleClick }, "Request Token")))));
+};
+exports["default"] = LineLogin;

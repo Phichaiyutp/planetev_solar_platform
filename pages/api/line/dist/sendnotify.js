@@ -36,56 +36,75 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-var report = function (selectedStation, selectedYear, selectedMonth) { return __awaiter(void 0, void 0, void 0, function () {
-    var hostReport, portReport, response, data, error_1;
+var pg_1 = require("@/db/pg");
+var sendMessage = function (lineToken, message) { return __awaiter(void 0, void 0, void 0, function () {
+    var response, data, error_1;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                _a.trys.push([0, 3, , 4]);
-                hostReport = process.env.NEXT_PUBLIC_HOST_REPORT || "planetev_report";
-                portReport = process.env.NEXT_PUBLIC_HOST_PORT_REPORT || 5000;
-                return [4 /*yield*/, fetch("http://" + hostReport + ":" + portReport + "/download/xlsx/" + selectedStation + "?year=" + selectedYear + "&month=" + selectedMonth, {
-                        method: 'GET',
+                _a.trys.push([0, 5, , 6]);
+                return [4 /*yield*/, fetch('https://notify-api.line.me/api/notify', {
+                        method: 'POST',
                         headers: {
-                            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                        }
+                            'Authorization': "Bearer " + lineToken,
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: new URLSearchParams({
+                            message: message
+                        }).toString()
                     })];
             case 1:
                 response = _a.sent();
-                return [4 /*yield*/, response.arrayBuffer()];
+                if (!response.ok) return [3 /*break*/, 3];
+                return [4 /*yield*/, response.json()];
             case 2:
                 data = _a.sent();
                 return [2 /*return*/, data];
-            case 3:
+            case 3: throw new Error('Failed to send message');
+            case 4: return [3 /*break*/, 6];
+            case 5:
                 error_1 = _a.sent();
                 console.error('Error:', error_1);
-                return [2 /*return*/, null];
-            case 4: return [2 /*return*/];
+                throw error_1;
+            case 6: return [2 /*return*/];
         }
     });
 }); };
-exports["default"] = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, selectedStation, selectedYear, selectedMonth, reportData;
-    return __generator(this, function (_b) {
-        switch (_b.label) {
-            case 0:
-                _a = req.query, selectedStation = _a.selectedStation, selectedYear = _a.selectedYear, selectedMonth = _a.selectedMonth;
-                if (!selectedStation || !selectedYear || !selectedMonth) {
-                    res.status(400).json({ error: 'Missing parameters' });
-                    return [2 /*return*/];
-                }
-                return [4 /*yield*/, report(selectedStation, selectedYear, selectedMonth)];
-            case 1:
-                reportData = _b.sent();
-                if (reportData) {
-                    res.setHeader('Content-Disposition', 'attachment; filename="report.xlsx"');
-                    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-                    res.status(200).send(Buffer.from(reportData));
-                }
-                else {
-                    res.status(500).json({ error: 'Internal server error' });
-                }
-                return [2 /*return*/];
-        }
+function handler(req, res) {
+    var _a;
+    return __awaiter(this, void 0, void 0, function () {
+        var _b, username, message, result, lineToken, response, error_2;
+        return __generator(this, function (_c) {
+            switch (_c.label) {
+                case 0:
+                    if (!(req.method === 'POST')) return [3 /*break*/, 6];
+                    _c.label = 1;
+                case 1:
+                    _c.trys.push([1, 4, , 5]);
+                    _b = req.body, username = _b.username, message = _b.message;
+                    return [4 /*yield*/, pg_1["default"].query('SELECT line_token FROM users WHERE username = $1', [username])];
+                case 2:
+                    result = _c.sent();
+                    lineToken = (_a = result.rows[0]) === null || _a === void 0 ? void 0 : _a.line_token;
+                    if (!lineToken)
+                        throw new Error('Line token not found for the specified username');
+                    return [4 /*yield*/, sendMessage(lineToken, message)];
+                case 3:
+                    response = _c.sent();
+                    res.status(200).json(response);
+                    return [3 /*break*/, 5];
+                case 4:
+                    error_2 = _c.sent();
+                    console.error('Error:', error_2);
+                    res.status(500).json({ error: 'Internal Server Error' });
+                    return [3 /*break*/, 5];
+                case 5: return [3 /*break*/, 7];
+                case 6:
+                    res.status(405).json({ error: 'Method Not Allowed' });
+                    _c.label = 7;
+                case 7: return [2 /*return*/];
+            }
+        });
     });
-}); });
+}
+exports["default"] = handler;

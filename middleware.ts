@@ -4,23 +4,31 @@ import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
 import { JWTExpired } from 'jose/errors';
 
+
 export async function middleware(request: NextRequest) {
   try {
     const cookieStore = cookies();
-    const access_token = cookieStore.get('access_token')?.value;
-  
+    const access_token_cookie = cookieStore.get('access_token')?.value;
+    let access_token = access_token_cookie;
+    
     if (!access_token) {
-      throw new Error('Access token not found');
+        const authHeader = request.headers.get('Authorization');
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            access_token = authHeader.split(' ')[1];
+        }
+    }
+    
+    if (!access_token) {
+        throw new Error('Access token not found');
     }
 
     const secretKey: string = process.env.NEXT_PUBLIC_KEY|| '';
     const key = new TextEncoder().encode(secretKey);
-    //const { payload }: any = 
     await jwtVerify(access_token, key, {
       algorithms: ['HS256'],
     });
-    //console.log(payload)
     return NextResponse.next();
+    
   } catch (error) {
     if (error instanceof JWTExpired) {
       try {
@@ -50,7 +58,7 @@ export async function middleware(request: NextRequest) {
           response.cookies.set("access_token", data.access_token);
           return response
         }else if(data.status == 'expired'){
-          throw new Error('Refresh expired');
+          //throw new Error('Refresh expired');
         }else {
           throw new Error('Refresh failed');
         }
@@ -59,7 +67,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL(`${process.env.NEXT_PUBLIC_BASE_PATH}/login`, request.url));
       }
     } else {
-      console.error('JWT verification error:', error);
+      //console.error('JWT verification error:', error);
       return NextResponse.redirect(new URL(`${process.env.NEXT_PUBLIC_BASE_PATH}/login`, request.url));
     }
   }
@@ -69,5 +77,5 @@ export const config = {
   api: {
     bodyParser: false,
   },
-  matcher: ['/dashboard','/api/:path*'],
+  matcher: ['/dashboard','/notify/:path*','/api/dashboard/:path*'],
 };

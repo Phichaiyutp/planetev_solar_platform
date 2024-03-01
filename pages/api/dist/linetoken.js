@@ -1,4 +1,3 @@
-'use server';
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -37,47 +36,46 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-var headers_1 = require("next/headers");
-var LoginAction = function (user, password) { return __awaiter(void 0, void 0, Promise, function () {
-    var hostAuth, hostPortAuth, url, response, data, error_1;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0:
-                _a.trys.push([0, 3, , 4]);
-                hostAuth = process.env.NEXT_PUBLIC_HOST_AUTH || 'localhost';
-                hostPortAuth = process.env.NEXT_PUBLIC_HOST_PORT_AUTH || 5001;
-                url = "http://" + hostAuth + ":" + hostPortAuth + "/login";
-                return [4 /*yield*/, fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ username: user, password: password }),
-                        timeout: 10000
-                    })];
-            case 1:
-                response = _a.sent();
-                if (!response.ok) {
-                    throw new Error('Failed to authenticate. Please try again.');
-                }
-                return [4 /*yield*/, response.json()];
-            case 2:
-                data = _a.sent();
-                if (data.error) {
-                    return [2 /*return*/, { error: data.error }];
-                }
-                else if (data.status === 'ok') {
-                    headers_1.cookies().set('access_token', data.access_token);
-                    headers_1.cookies().set('refresh_token', data.refresh_token);
-                    return [2 /*return*/, { success: true }];
-                }
-                return [3 /*break*/, 4];
-            case 3:
-                error_1 = _a.sent();
-                console.error('Login failed:', error_1);
-                return [2 /*return*/, { error: 'Login failed. Please check your credentials.' }];
-            case 4: return [2 /*return*/, { error: 'Login failed. Please check your credentials.' }];
-        }
+var pg_1 = require("@/db/pg");
+function handler(req, res) {
+    return __awaiter(this, void 0, void 0, function () {
+        var _a, username, line_token, line_code, existingUser, error_1;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0:
+                    if (!(req.method === 'POST')) return [3 /*break*/, 9];
+                    _a = req.body, username = _a.username, line_token = _a.line_token, line_code = _a.line_code;
+                    console.log(username, line_token, line_code);
+                    _b.label = 1;
+                case 1:
+                    _b.trys.push([1, 7, , 8]);
+                    return [4 /*yield*/, pg_1["default"].query('SELECT * FROM users WHERE username = $1', [username])];
+                case 2:
+                    existingUser = _b.sent();
+                    if (!(existingUser.rows.length > 0)) return [3 /*break*/, 4];
+                    return [4 /*yield*/, pg_1["default"].query('UPDATE users SET line_token = $1, line_code = $2 WHERE username = $3', [line_token, line_code, username])];
+                case 3:
+                    _b.sent();
+                    return [3 /*break*/, 6];
+                case 4: return [4 /*yield*/, pg_1["default"].query('INSERT INTO users (username, line_token, line_code) VALUES ($1, $2, $3)', [username, line_token, line_code])];
+                case 5:
+                    _b.sent();
+                    _b.label = 6;
+                case 6:
+                    res.status(200).json({ message: 'Line token and line code updated/inserted successfully' });
+                    return [3 /*break*/, 8];
+                case 7:
+                    error_1 = _b.sent();
+                    console.error('Error updating/inserting line token and line code:', error_1);
+                    res.status(500).json({ message: 'Internal server error' });
+                    return [3 /*break*/, 8];
+                case 8: return [3 /*break*/, 10];
+                case 9:
+                    res.status(405).json({ message: 'Method Not Allowed' });
+                    _b.label = 10;
+                case 10: return [2 /*return*/];
+            }
+        });
     });
-}); };
-exports["default"] = LoginAction;
+}
+exports["default"] = handler;

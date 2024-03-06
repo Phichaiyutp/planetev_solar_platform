@@ -12,6 +12,7 @@ import moment from "moment";
 // Define the interface for StationItem
 interface StationItem {
   realtime_pv: number;
+  capacity: number;
   station_code: number;
   station_name: string;
   station_name_short: string;
@@ -175,8 +176,21 @@ export const TotalEnergyChart: React.FC = () => {
   );
 };
 
+
 export const StationInfo: React.FC = () => {
   const stations = FetchData();
+
+  const rtpv = (realtime_pv:number, capacity:number) => {
+    let color = '';
+    if (realtime_pv >= 0.7 * capacity) {
+        color = 'text-green-500'; 
+    } else if (realtime_pv >= 0.3 * capacity){
+        color = 'text-yellow-500'; 
+    } else {
+        color = 'text-red-500'; 
+    }
+    return color;
+  }
   return (
     <div className="flex flex-wrap">
       {stations.map((station, index) => (
@@ -196,8 +210,15 @@ export const StationInfo: React.FC = () => {
               },
               {
                 valueName: "Real-time PV",
-                value: Number(station.realtime_pv.toFixed(2)).toLocaleString(),
+                value: `${Number(station.realtime_pv.toFixed(2)).toLocaleString()} / ${Number(station.capacity.toFixed(2)).toLocaleString()}`,
                 unit: "kW",
+                color: rtpv(station.realtime_pv, station.capacity)
+              },
+              {
+                valueName: "Real-time PV Ratio",
+                value: Number(((station.realtime_pv/station.capacity)*100).toFixed(2)).toLocaleString(),
+                unit: "%",
+                color: rtpv(station.realtime_pv, station.capacity)
               },
               {
                 valueName: "Real-time Load",

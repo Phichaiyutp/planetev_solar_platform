@@ -1,6 +1,7 @@
 
 interface StationItem {
   realtime_pv: number;
+  capacity: number;
   station_code: number;
   station_name: string; 
   station_name_short: string;

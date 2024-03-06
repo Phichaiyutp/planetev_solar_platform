@@ -5,6 +5,7 @@ interface Value {
   valueName: string;
   value?: string;
   unit?: string;
+  color?: string;
   icon_id?: number;
 }
 
@@ -28,7 +29,7 @@ const Card = ({ title, data }: CardProps) => {
                     className={`px-4 text-sm lg:text-lg 2xl:text-xl font-bold
                     ${index === 0 ? 'text-success' : ''}
                     ${index === 1 ? 'text-primary' : ''}
-                    ${index === 2 ? 'text-secondary' : ''}`}
+                    ${item.color ? item.color : ''}`}
                   >
                     {item.value}
                   </p>

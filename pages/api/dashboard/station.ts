@@ -93,23 +93,25 @@ const weather = async (param: weatherItem) => {
 };
 
 
-const get_lat_long = (async () => {
+const Get_ms_stations = (async () => {
   const client = await pool.connect();
   try {
-    const result = await client.query(
+    let result = await client.query(
         ` 
-        SELECT latitude, longitude, station_code
+        SELECT capacity, latitude, longitude, station_code, station_name,station_address
         FROM ms_stations;
         `);    
+    result.rows.map((item,index)=>{
+      item.station_name_short = item.station_name.includes('รหัส') ? item.station_name.replace(/ รหัส \d+/g, '') : item.station_name;
+    })
     return result.rows;
   } finally {
     client.release();
   }  
 })
 
-const get_weather: () => Promise<any[]> = async () => {
+const Get_weather = (async (lat_long: any[]) => {
   try {
-    let lat_long = await get_lat_long();
     if (lat_long) {
       for (const item of lat_long) {
         const param = {
@@ -131,11 +133,11 @@ const get_weather: () => Promise<any[]> = async () => {
     console.error(error);
     return []; 
   }
-};
+});
 
 
 
-const get_inverter = (async () => {
+const Get_inverter = (async () => {
   const client = await pool.connect();
   try {
     const result = await client.query(
@@ -164,7 +166,7 @@ const get_inverter = (async () => {
   }  
 }) 
 
-const get_energy = (async () => {
+const Get_energy = (async () => {
   const client = await pool.connect();
   try {
     const result = await client.query(
@@ -190,7 +192,7 @@ const get_energy = (async () => {
     client.release();
   } 
 }) 
-const get_inv_energy = (async () => {
+const Get_inv_energy = (async () => {
   const client = await pool.connect();
   try {
     const result = await client.query(
@@ -216,30 +218,29 @@ const get_inv_energy = (async () => {
     client.release();
   } 
 }) 
-const get_stations = (async () => {
+const Get_stations = (async () => {
   const client = await pool.connect();
   try {
     let result = await client.query(
         `  
-          SELECT day_power as yield_today,total_power as total_yield ,real_health_state as station_status ,station_code,station_name,station_address  
-          FROM public.stations;
+          SELECT day_power as yield_today,total_power as total_yield ,real_health_state as station_status ,station_code  
+          FROM stations;
         `);
         result.rows.map((item,index)=>{
           item.station_status = EncodeStationStatus(item.station_status)
-          item.station_name_short = item.station_name.includes('รหัส') ? item.station_name.replace(/ รหัส \d+/g, '') : item.station_name;
         })
     return result.rows;
   } finally {
     client.release();
   }
 }) 
-const get_stations_year = (async () => {
+const Get_stations_year = (async () => {
   const client = await pool.connect();
   try {
     const result = await client.query(
         `  
         SELECT SUM(reduction_total_co2) AS co2, station_code
-        FROM public.stations_year
+        FROM stations_year
         GROUP BY station_code;        
         `);
     return result.rows;
@@ -247,7 +248,7 @@ const get_stations_year = (async () => {
     client.release();
   } 
 })
-const get_tou = (async () => {
+const Get_tou = (async () => {
   const client = await pool.connect();
   try {
     const result = await client.query(
@@ -266,14 +267,15 @@ const get_tou = (async () => {
     client.release();
   } 
 })
-const get_data = ( async () => {
-  const inverter = await get_inverter();
-  const stations = await get_stations(); 
-  const stations_y = await get_stations_year(); 
-  const energy = await get_energy();
-  const inv_energy = await get_inv_energy();
-  const tou = await get_tou();
-  const weather = await get_weather();
+const Get_data = ( async () => {
+  const inverter = await Get_inverter();
+  const stations = await Get_stations(); 
+  const stations_y = await Get_stations_year(); 
+  const energy = await Get_energy();
+  const inv_energy = await Get_inv_energy();
+  const tou = await Get_tou();
+  const ms_stations = await Get_ms_stations()
+  const weather = await Get_weather(ms_stations);
 
   const mapArr2 = stations.reduce((acc, entry) => {
     acc[entry.station_code] = entry;
@@ -300,7 +302,11 @@ const get_data = ( async () => {
     return acc;
   }, {});
 
-  const mapArr7 = weather.reduce((acc: { [x: string]: any; }, entry: { station_code: string | number; }) => {
+  const mapArr7 = ms_stations.reduce((acc: { [x: string]: any; }, entry: { station_code: string | number; }) => {
+    acc[entry.station_code] = entry;
+    return acc;
+  }, {});
+  const mapArr8 = weather.reduce((acc: { [x: string]: any; }, entry: { station_code: string | number; }) => {
     acc[entry.station_code] = entry;
     return acc;
   }, {});
@@ -313,6 +319,7 @@ const get_data = ( async () => {
     ...mapArr5[entry.station_code],
     ...mapArr6[entry.station_code],
     ...mapArr7[entry.station_code],
+    ...mapArr8[entry.station_code],
   }));
 
   combinedData.map((item,index)=>{
@@ -325,7 +332,7 @@ const get_data = ( async () => {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     try {
-      const payload = await get_data()
+      const payload = await Get_data()
       res.status(200).json(payload);
     } catch (error) {
       console.error('Error processing data:', error);

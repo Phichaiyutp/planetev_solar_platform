@@ -19,7 +19,7 @@ const report = async (selectedStation: string, selectedYear: string, selectedMon
     }
 }
 
-export default async (req: NextApiRequest, res: NextApiResponse) => {
+const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const { selectedStation, selectedYear, selectedMonth } = req.query;
 
     if (!selectedStation || !selectedYear || !selectedMonth) {
@@ -37,3 +37,5 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 }
+
+export default handler;

@@ -3,7 +3,7 @@ FROM node:18-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-RUN npm install -g npm@10.4.0
+RUN npm install -g npm
 COPY package.json yarn.lock* ./
 RUN npm install
 

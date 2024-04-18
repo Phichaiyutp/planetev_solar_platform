@@ -17,7 +17,7 @@ RUN npm run build
 
 # Stage 3: Run the production
 FROM node:18-alpine AS runner
-WORKDIR /app
+WORKDIR  /app
 
 ENV NODE_ENV production
 ENV NEXT_SHARP_PATH /app/node_modules/sharp

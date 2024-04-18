@@ -200,48 +200,48 @@ export const StationInfo: React.FC = () => {
             data={[
               {
                 valueName: "Energy",
-                value: Number(station.energy.toFixed(2)).toLocaleString(),
+                value: station.energy ? Number(station.energy.toFixed(2)).toLocaleString() : "0",
                 unit: "kWh",
               },
               {
                 valueName: "Revenue",
-                value: Number(station.revenue.toFixed(2)).toLocaleString(),
+                value: station.revenue ? Number(station.revenue.toFixed(2)).toLocaleString(): "0",
                 unit: "THB",
               },
               {
                 valueName: "Real-time PV",
-                value: `${Number(station.realtime_pv.toFixed(2)).toLocaleString()} / ${Number(station.capacity.toFixed(2)).toLocaleString()}`,
+                value: station.realtime_pv && station.capacity ? `${Number(station.realtime_pv.toFixed(2)).toLocaleString()} / ${Number(station.capacity.toFixed(2)).toLocaleString()}`: "0",
                 unit: "kW",
                 color: rtpv(station.realtime_pv, station.capacity)
               },
               {
                 valueName: "Real-time PV Ratio",
-                value: Number(((station.realtime_pv/station.capacity)*100).toFixed(2)).toLocaleString(),
+                value: station.realtime_pv && station.capacity ? Number(((station.realtime_pv/station.capacity)*100).toFixed(2)).toLocaleString(): "0",
                 unit: "%",
                 color: rtpv(station.realtime_pv, station.capacity)
               },
               {
                 valueName: "Real-time Load",
-                value: Number(
+                value: station.realtime_load ?  Number(
                   station.realtime_load.toFixed(2)
-                ).toLocaleString(),
+                ).toLocaleString(): "0",
                 unit: "kW",
               },
               {
                 valueName: "Yield Today",
-                value: Number(station.yield_today.toFixed(2)).toLocaleString(),
+                value: station.yield_today ? Number(station.yield_today.toFixed(2)).toLocaleString(): "0",
                 unit: "kWh",
               },
               {
                 valueName: "Total Yield",
-                value: Number(
+                value: station.total_yield ? Number(
                   (station.total_yield / 1000).toFixed(2)
-                ).toLocaleString(),
+                ).toLocaleString(): "0",
                 unit: "MWh",
               },
               {
                 valueName: "CO2 Avoided",
-                value: Number(station.co2.toFixed(2)).toLocaleString(),
+                value: station.co2?  Number(station.co2.toFixed(2)).toLocaleString(): "0",
                 unit: "tons",
               },
               {

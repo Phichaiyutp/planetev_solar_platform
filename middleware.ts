@@ -6,8 +6,8 @@ import { JWTExpired } from 'jose/errors';
 
 
 export async function middleware(request: NextRequest) {
-  try {
-    const cookieStore = cookies();
+  /*try {
+     const cookieStore = cookies();
     const access_token_cookie = cookieStore.get('access_token')?.value;
     let access_token = access_token_cookie;
     
@@ -70,12 +70,10 @@ export async function middleware(request: NextRequest) {
       //console.error('JWT verification error:', error);
       return NextResponse.redirect(new URL(`${process.env.NEXT_PUBLIC_BASE_PATH}/login`, request.url));
     }
-  }
+  } */
+  return NextResponse.next();
 }
 
 export const config = {
-  api: {
-    bodyParser: false,
-  },
-  matcher: ['/dashboard','/notify/:path*','/api/dashboard/:path*'],
+  matcher: ['/dashboard','/notify/:path*'],
 };

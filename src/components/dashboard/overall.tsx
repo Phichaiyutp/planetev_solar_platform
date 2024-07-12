@@ -3,19 +3,7 @@ import React, { useEffect, useState } from "react";
 import Card from "./ui/card";
 import CardDouble from "./ui/card_double";
 import {GetOverallData} from "./api/get_api_data";
-
-interface OverallItem {
-  realtime_pv: number;
-  yield_today: number;
-  total_yield: number;
-  co2: number;
-  total_on_peak: number;
-  total_off_peak: number;
-  energy_overall: number;
-  revenue_total: number;
-  revenue_on: number;
-  revenue_off: number;
-}
+import {StationItem,OverallItem} from './interface'
 
 
 const FetchData: React.FC<{ children: (overall: OverallItem | undefined) => React.ReactNode }> = ({ children }) => {
@@ -49,7 +37,7 @@ const FetchData: React.FC<{ children: (overall: OverallItem | undefined) => Reac
           title="Loading..."
           value={'0.0'}
           unit=""
-          text="font-bold text-2xl xl:text-3xl 2xl:text-5xl text-success"
+          text="font-bold text-2xl xl:text-3xl 2xl:text-4xl text-success"
         />
     </div> : children(overall));
 };
@@ -62,7 +50,7 @@ export const EnergyOverall: React.FC = () => {
           title="Energy Overall"
           value={Number(overall?.energy_overall.toFixed(2)).toLocaleString() || '0'}
           unit="kWh"
-          text="font-bold text-2xl xl:text-3xl 2xl:text-5xl text-success"
+          text="font-bold text-2xl xl:text-3xl 2xl:text-4xl text-success"
         />
       )}
     </FetchData>
@@ -73,7 +61,7 @@ export const RevenueOverall: React.FC = () => {
   return (
     <FetchData>
       {(overall) => (
-        <Card title='Revenue Overall' value={Number(overall?.revenue_total.toFixed(2)).toLocaleString() || '0'} unit="THB" text="font-bold text-2xl xl:text-3xl 2xl:text-5xl text-primary"/>
+        <Card title='Revenue Overall' value={Number(overall?.revenue_total.toFixed(2)).toLocaleString() || '0'} unit="THB" text="font-bold text-2xl xl:text-3xl 2xl:text-4xl text-primary"/>
       )}
     </FetchData>
   );
@@ -102,10 +90,10 @@ export const TotalOffPeak: React.FC = () => {
         <CardDouble title='Total Off Peak' 
     value={Number(overall?.total_off_peak.toFixed(2)).toLocaleString() || '0'} 
     unit="kWh" 
-    text="font-bold text-2xl xl:text-3xl 2xl:text-5xl  text-success"
+    text="font-bold text-2xl xl:text-3xl 2xl:text-4xl  text-success"
     second_value={Number(overall?.revenue_off.toFixed(2)).toLocaleString() || '0'} 
     second_unit="THB" 
-    second_text="font-bold text-2xl xl:text-3xl 2xl:text-5xl text-primary"/>
+    second_text="font-bold text-2xl xl:text-3xl 2xl:text-4xl text-primary"/>
       )}
     </FetchData>
   );
@@ -118,10 +106,10 @@ export const TotalOnPeak: React.FC = () => {
         <CardDouble title='Total On Peak' 
     value={Number(overall?.total_on_peak.toFixed(2)).toLocaleString() || '0'} 
     unit="kWh" 
-    text="font-bold text-2xl xl:text-3xl 2xl:text-5xl text-success"
+    text="font-bold text-2xl xl:text-3xl 2xl:text-4xl text-success"
     second_value={Number(overall?.revenue_on.toFixed(2)).toLocaleString() || '0'} 
     second_unit="THB" 
-    second_text="font-bold text-2xl xl:text-3xl 2xl:text-5xl text-primary"/>
+    second_text="font-bold text-2xl xl:text-3xl 2xl:text-4xl text-primary"/>
       )}
     </FetchData>
   );
@@ -131,7 +119,7 @@ export const RealtimePV: React.FC = () => {
   return (
     <FetchData>
       {(overall) => (
-        <Card title='Real-time PV' value={Number(overall?.realtime_pv.toFixed(2)).toLocaleString() || '0'} unit="kW" bg="bg-primary" text="font-bold text-2xl xl:text-3xl 2xl:text-5xl"/>
+        <Card title='Real-time PV' value={Number(overall?.realtime_pv.toFixed(2)).toLocaleString() || '0'} unit="kW" bg="bg-primary" text="font-bold text-2xl xl:text-3xl 2xl:text-4xl"/>
       )}
     </FetchData>
   );
@@ -141,7 +129,7 @@ export const YieldToday: React.FC = () => {
   return (
     <FetchData>
       {(overall) => (
-        <Card title='Yield Today' value={Number(overall?.yield_today.toFixed(2)).toLocaleString() || '0'} unit="kWh" bg="bg-primary" text="font-bold text-2xl xl:text-3xl 2xl:text-5xl"/>
+        <Card title='Yield Today' value={Number(overall?.yield_today.toFixed(2)).toLocaleString() || '0'} unit="kWh" bg="bg-primary" text="font-bold text-2xl xl:text-3xl 2xl:text-4xl"/>
       )}
     </FetchData>
   );
@@ -151,7 +139,7 @@ export const ConsumpionToday: React.FC = () => {
   return (
     <FetchData>
       {(overall) => (
-        <Card title='Consumpion Today' value={Number(overall?.total_yield.toFixed(2)).toLocaleString() || '0'} unit="kWh" bg="bg-primary" text="font-bold text-2xl xl:text-3xl 2xl:text-5xl"/>
+        <Card title='Consumpion Today' value={Number(overall?.total_yield.toFixed(2)).toLocaleString() || '0'} unit="kWh" bg="bg-primary" text="font-bold text-2xl xl:text-3xl 2xl:text-4xl"/>
       )}
     </FetchData>
   );
@@ -161,7 +149,7 @@ export const TotalCo2: React.FC = () => {
   return (
     <FetchData>
       {(overall) => (
-        <Card title='Total CO2 Avoided' value={Number(overall?.co2.toFixed(2)).toLocaleString() || '0'} unit="Tons" bg="bg-secondary"  text="font-bold text-2xl xl:text-3xl 2xl:text-5xl"/>
+        <Card title='Total CO2 Avoided' value={Number(overall?.co2.toFixed(2)).toLocaleString() || '0'} unit="Tons" bg="bg-secondary"  text="font-bold text-2xl xl:text-3xl 2xl:text-4xl"/>
       )}
     </FetchData>
   );

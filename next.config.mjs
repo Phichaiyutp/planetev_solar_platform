@@ -1,5 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = { 
+    images: {
+      remotePatterns: [
+        {
+          protocol: 'https',
+          hostname: 'openweathermap.org',
+          port: '',
+          pathname: '/img/wn/**',
+        },
+      ],
+    },
     output: 'standalone',
     basePath: process.env.NEXT_PUBLIC_BASE_PATH,
     reactStrictMode: false,

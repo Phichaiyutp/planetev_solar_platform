@@ -1,12 +1,12 @@
 import React from "react";
-import WeatherIcon from "@/components/dashboard/ui/weather_Icon";
+import Image from 'next/image'
 
 interface Value {
   valueName: string;
   value?: string;
   unit?: string;
   color?: string;
-  icon_id?: number;
+  icon?: string;
 }
 
 interface CardProps {
@@ -34,10 +34,13 @@ const Card = ({ title, data }: CardProps) => {
                     {item.value}
                   </p>
                   <p className="align-middle">{item.unit}</p> 
-                  {item.icon_id && 
-                    <div className="pl-2">
-                      <WeatherIcon code={item.icon_id || 1} />
-                    </div>
+                  {item.icon && 
+                    <Image
+                      src={item.icon}
+                      width={50}
+                      height={50}
+                      alt="Picture of the weather"
+                    />
                   }
                 </div>
               </div>

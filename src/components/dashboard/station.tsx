@@ -8,29 +8,7 @@ import Card from "./ui/card_list";
 import Datetime from "react-datetime";
 import "react-datetime/css/react-datetime.css";
 import moment from "moment";
-
-// Define the interface for StationItem
-interface StationItem {
-  realtime_pv: number;
-  capacity: number;
-  station_code: number;
-  station_name: string;
-  station_name_short: string;
-  station_address: number;
-  timestamp: string;
-  yield_today: number;
-  total_yield: number;
-  station_status: string;
-  co2: number;
-  realtime_grid: number;
-  energy: number;
-  revenue: number;
-  realtime_load: number;
-  cond: string;
-  cond_id: number;
-  rh: number;
-  tc: number;
-}
+import {StationItem,OverallItem} from './interface'
 
 // Register CategoryScale only once
 Chart.register(CategoryScale);
@@ -179,7 +157,6 @@ export const TotalEnergyChart: React.FC = () => {
 
 export const StationInfo: React.FC = () => {
   const stations = FetchData();
-
   const rtpv = (realtime_pv:number, capacity:number) => {
     let color = '';
     if (realtime_pv >= 0.7 * capacity) {
@@ -205,7 +182,7 @@ export const StationInfo: React.FC = () => {
               },
               {
                 valueName: "Revenue",
-                value: station.revenue ? Number(station.revenue.toFixed(2)).toLocaleString(): "0",
+                value: station.revenue_total ? Number(station.revenue_total.toFixed(2)).toLocaleString(): "0",
                 unit: "THB",
               },
               {
@@ -246,8 +223,8 @@ export const StationInfo: React.FC = () => {
               },
               {
                 valueName: "Weather",
-                unit: station.cond || "Clear",
-                icon_id: station.cond_id || 1,
+                unit: station.condDescription || "Clear",
+                icon: station.cond_icon || "",
               },
             ]}
           />

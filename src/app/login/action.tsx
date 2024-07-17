@@ -8,9 +8,7 @@ interface LoginResult {
 
 const LoginAction = async (user: string, password: string): Promise<LoginResult> => {
   try {
-    const hostAuth = process.env.NEXT_PUBLIC_HOST_AUTH || 'localhost';
-    const hostPortAuth = process.env.NEXT_PUBLIC_HOST_PORT_AUTH || 5001;
-    const url = `http://${hostAuth}:${hostPortAuth}/login`;
+    const url = `${process.env.NEXT_PUBLIC_API_HOST}/api/auth/login`;
     const response = await fetch(url, {
       method: 'POST',
       headers: {

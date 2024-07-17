@@ -6,7 +6,7 @@ import { JWTExpired } from 'jose/errors';
 
 
 export async function middleware(request: NextRequest) {
-  /*try {
+  try {
      const cookieStore = cookies();
     const access_token_cookie = cookieStore.get('access_token')?.value;
     let access_token = access_token_cookie;
@@ -37,10 +37,7 @@ export async function middleware(request: NextRequest) {
         if (!refresh_token) {
           throw new Error('Refresh token not found');
         }
-        
-        const hostAuth = process.env.NEXT_PUBLIC_HOST_AUTH;
-        const hostPortAuth = process.env.NEXT_PUBLIC_HOST_PORT_AUTH;
-        const url = `http://${hostAuth}:${hostPortAuth}/refresh`;
+        const url = `${process.env.NEXT_PUBLIC_API_HOST}/api/auth/refresh`;
         const response = await fetch(url, {
           method: 'POST',
           headers: {
@@ -70,8 +67,7 @@ export async function middleware(request: NextRequest) {
       //console.error('JWT verification error:', error);
       return NextResponse.redirect(new URL(`${process.env.NEXT_PUBLIC_BASE_PATH}/login`, request.url));
     }
-  } */
-  return NextResponse.next();
+  }
 }
 
 export const config = {

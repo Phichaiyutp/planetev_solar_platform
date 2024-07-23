@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.swal2-actions .swal2-confirm {
+  background-color: #7066e0;
+  color: #fff;
+}
+
+.swal2-actions .swal2-cancel {
+  background-color: #6e7881;
+  color: #FFF;
+}
+.custom-swal2-warning.swal2-warning {
+  border-color: #f5c725;
+  color: #f5c725;
+}
+

@@ -8,7 +8,10 @@ import Card from "./ui/card_list";
 import Datetime from "react-datetime";
 import "react-datetime/css/react-datetime.css";
 import moment from "moment";
-import {StationItem,OverallItem} from './interface'
+import { StationItem, OverallItem } from './interface'
+import { generatePdf } from "./GeneratePDF";
+import Swal from 'sweetalert2';
+
 
 // Register CategoryScale only once
 Chart.register(CategoryScale);
@@ -36,7 +39,7 @@ const FetchData = () => {
   return stations;
 };
 
-export const StationStatus: React.FC = () => {
+export const StationStatus = () => {
   const stations = FetchData();
 
   return (
@@ -59,11 +62,10 @@ export const StationStatus: React.FC = () => {
               <div className="flex justify-between mt-2">
                 <p className="w-11/12">{item.station_name_short}</p>
                 <p
-                  className={`w-1/12 text-end ${
-                    item.station_status === "Online"
-                      ? "text-green-500"
-                      : "text-red-500"
-                  }`}
+                  className={`w-1/12 text-end ${item.station_status === "Online"
+                    ? "text-green-500"
+                    : "text-red-500"
+                    }`}
                 >
                   {item.station_status}
                 </p>
@@ -76,7 +78,7 @@ export const StationStatus: React.FC = () => {
   );
 };
 
-export const TotalEnergyChart: React.FC = () => {
+export const TotalEnergyChart = () => {
   const stations = FetchData();
   const labels = stations.map((item) => item.station_name_short);
   const data = stations.map((item) => item.yield_today);
@@ -121,9 +123,8 @@ export const TotalEnergyChart: React.FC = () => {
         callbacks: {
           label: function (context: any) {
             if (context.parsed.y !== null) {
-              const label = `${context.dataset.label || ""} : ${
-                context.formattedValue
-              } ${unitData}`;
+              const label = `${context.dataset.label || ""} : ${context.formattedValue
+                } ${unitData}`;
               return label;
             }
           },
@@ -155,16 +156,16 @@ export const TotalEnergyChart: React.FC = () => {
 };
 
 
-export const StationInfo: React.FC = () => {
+export const StationInfo = () => {
   const stations = FetchData();
-  const rtpv = (realtime_pv:number, capacity:number) => {
+  const rtpv = (realtime_pv: number, capacity: number) => {
     let color = '';
     if (realtime_pv >= 0.7 * capacity) {
-        color = 'text-green-500'; 
-    } else if (realtime_pv >= 0.3 * capacity){
-        color = 'text-yellow-500'; 
+      color = 'text-green-500';
+    } else if (realtime_pv >= 0.3 * capacity) {
+      color = 'text-yellow-500';
     } else {
-        color = 'text-red-500'; 
+      color = 'text-red-500';
     }
     return color;
   }
@@ -182,43 +183,43 @@ export const StationInfo: React.FC = () => {
               },
               {
                 valueName: "Revenue",
-                value: station.revenue_total ? Number(station.revenue_total.toFixed(2)).toLocaleString(): "0",
+                value: station.revenue_total ? Number(station.revenue_total.toFixed(2)).toLocaleString() : "0",
                 unit: "THB",
               },
               {
                 valueName: "Real-time PV",
-                value: station.realtime_pv && station.capacity ? `${Number(station.realtime_pv.toFixed(2)).toLocaleString()} / ${Number(station.capacity.toFixed(2)).toLocaleString()}`: "0",
+                value: station.realtime_pv && station.capacity ? `${Number(station.realtime_pv.toFixed(2)).toLocaleString()} / ${Number(station.capacity.toFixed(2)).toLocaleString()}` : "0",
                 unit: "kW",
                 color: rtpv(station.realtime_pv, station.capacity)
               },
               {
                 valueName: "Real-time PV Ratio",
-                value: station.realtime_pv && station.capacity ? Number(((station.realtime_pv/station.capacity)*100).toFixed(2)).toLocaleString(): "0",
+                value: station.realtime_pv && station.capacity ? Number(((station.realtime_pv / station.capacity) * 100).toFixed(2)).toLocaleString() : "0",
                 unit: "%",
                 color: rtpv(station.realtime_pv, station.capacity)
               },
               {
                 valueName: "Real-time Load",
-                value: station.realtime_load ?  Number(
+                value: station.realtime_load ? Number(
                   station.realtime_load.toFixed(2)
-                ).toLocaleString(): "0",
+                ).toLocaleString() : "0",
                 unit: "kW",
               },
               {
                 valueName: "Yield Today",
-                value: station.yield_today ? Number(station.yield_today.toFixed(2)).toLocaleString(): "0",
+                value: station.yield_today ? Number(station.yield_today.toFixed(2)).toLocaleString() : "0",
                 unit: "kWh",
               },
               {
                 valueName: "Total Yield",
                 value: station.total_yield ? Number(
                   (station.total_yield / 1000).toFixed(2)
-                ).toLocaleString(): "0",
+                ).toLocaleString() : "0",
                 unit: "MWh",
               },
               {
                 valueName: "CO2 Avoided",
-                value: station.co2?  Number(station.co2.toFixed(2)).toLocaleString(): "0",
+                value: station.co2 ? Number(station.co2.toFixed(2)).toLocaleString() : "0",
                 unit: "tons",
               },
               {
@@ -235,7 +236,7 @@ export const StationInfo: React.FC = () => {
 };
 
 
-export const ExportReport: React.FC = () => {
+export const ExportReport = () => {
   const stations = FetchData();
   const [downloading, setDownloading] = useState(false);
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
@@ -245,7 +246,7 @@ export const ExportReport: React.FC = () => {
   const handleDateChange = (date: moment.Moment | string) => {
     if (moment.isMoment(date) && date.isValid()) {
       setSelectedYear(date.year());
-      setSelectedMonth(date.month() + 1); // Adding 1 because months are zero-indexed
+      setSelectedMonth(date.month() + 1); 
     } else if (typeof date === "string") {
       const parsedDate = moment(date, "YYYY-MM");
       if (parsedDate.isValid()) {
@@ -259,29 +260,51 @@ export const ExportReport: React.FC = () => {
       setSelectedYear(null);
       setSelectedMonth(null);
     }
-
-
   };
+
+  const isValidDate = (current: moment.Moment) => {
+    const startDate = moment("2024-04-01");
+    const endDate = moment();
+    return current.isBetween(startDate, endDate, undefined, '[]');
+  };
+
   const handleStationChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedStation(event.target.value);
   };
 
-  const handleSubmit = async  () => {
+
+  const handleSubmit = async () => {
     try {
+      if (!selectedStation || !selectedYear || !selectedMonth) {
+        Swal.fire({
+          title: 'ขออภัย',
+          text: "กรุณาเลือกข้อมูลให้ถูกต้อง",
+          icon: 'error',
+          confirmButtonText: 'Close',
+          customClass: {
+            icon: 'custom-swal2-error',
+          },
+          willOpen: () => {
+            document.body.style.overflow = 'visible';
+          },
+        });
+        return;
+      }
+
       setDownloading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/report?selectedStation=${selectedStation}&selectedYear=${selectedYear}&selectedMonth=${selectedMonth}`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `bill_${new Date().toISOString().split('T')[0]}.xlsx`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+
+      let response;
+      if (selectedStation === 'All') {
+        console.log('All')
+        response = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/report/monthly/?year=${selectedYear}&month=${selectedMonth}`);
       } else {
-        console.error('Failed to fetch Excel file:', response.statusText);
+        console.log('Site')
+        response = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/report/monthly/?year=${selectedYear}&month=${selectedMonth}&station=${selectedStation}`);
+      }
+
+      if (response.ok) {
+        const data = await response.json();
+        generatePdf(data);
       }
     } catch (error) {
       console.error('Error exporting Excel file:', error);
@@ -293,23 +316,23 @@ export const ExportReport: React.FC = () => {
   return (
     <div className="flex flex-col text-base">
       <p className="font-bold text-xl text-success">Report/Billing</p>
-      <p className="pt-4">Year / Month</p>
+      <p className="pt-4">Year / Month sdasd</p>
       <Datetime
-        className="border rounded-lg border-slate-300 leading-9 ml-4 my-4 pl-2 w-fit max-w-60"
-        value={
-          selectedYear && selectedMonth
-            ? moment({ year: selectedYear, month: selectedMonth - 1 })
-            : ""
-        }
-        dateFormat="YYYY-MM"
-        timeFormat={false} // Disable time selection
-        onChange={(value: string | moment.Moment) => {
-          handleDateChange(value);
-        }}
-        closeOnSelect
-        inputProps={{ placeholder: "Select Year and Month", readOnly: true }}
-        
-      />
+      className="input input-bordered w-full max-w-60  flex items-center gap-2 mx-4 my-4 "
+      value={
+        selectedYear && selectedMonth
+          ? moment({ year: selectedYear, month: selectedMonth - 1 })
+          : ""
+      }
+      dateFormat="YYYY-MM"
+      timeFormat={false} // Disable time selection
+      onChange={(value: string | moment.Moment) => {
+        handleDateChange(value);
+      }}
+      isValidDate={isValidDate}
+      closeOnSelect
+      inputProps={{ placeholder: "Select Year and Month", readOnly: true }}
+    />
       <p>Plant</p>
       <select
         className="select select-bordered ml-4 mt-4 w-full max-w-60"
@@ -319,6 +342,7 @@ export const ExportReport: React.FC = () => {
         <option value="" disabled>
           Please select a plant
         </option>
+        <option value="All">All</option>
         {stations.map((station) => (
           <option key={station.station_code} value={station.station_code}>
             {station.station_name}
@@ -326,7 +350,7 @@ export const ExportReport: React.FC = () => {
         ))}
       </select>
       <button
-        className={`btn btn-success btn-md ml-4 mt-4 w-full max-w-60 text-white text-lg font-bold${downloading ? ' disabled' : ''}`}
+        className={`btn btn-success btn-md ml-4 mt-4 w-full max-w-60 text-white text-lg font-bold ${downloading ? ' disabled' : ''}`}
         onClick={handleSubmit}
         disabled={downloading}
       >

@@ -9,12 +9,16 @@ const LoginForm = () => {
   const [user, setUser] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState<boolean>(false);
+
 
   const handleSubmit = async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
+    setLoading(true);
 
     if (!user || !password) {
       setError('Please fill in all fields');
+      setLoading(false);
       return;
     }
 
@@ -23,12 +27,16 @@ const LoginForm = () => {
       if (loginResult?.error) {
         setError(loginResult.error);
         setPassword('');
+        setLoading(false);
       } else if (loginResult?.success) {
+        
         router.push('/dashboard');
+        setLoading(false);
       }
     } catch (error) {
       console.log(error)
       setError('Login failed. Please check your credentials.');
+      setLoading(false);
     }
   };
 
@@ -55,6 +63,11 @@ const LoginForm = () => {
           autoComplete="text"
           className="block w-full py-3 px-1 mt-2 text-gray-800 border-b-2 border-gray-100 focus:border-gray-500 focus:outline-none"
           required
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              handleSubmit(e);
+            }
+          }}
         />
 
         <label htmlFor="password" className="block mt-4 text-xs font-semibold text-gray-600 uppercase">Password</label>
@@ -68,15 +81,27 @@ const LoginForm = () => {
           autoComplete="current-password"
           className="block w-full py-3 px-1 mt-2 mb-4 text-gray-800 border-b-2 border-gray-100 focus:border-gray-500 focus:outline-none"
           required
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              handleSubmit(e);
+            }
+          }}
         />
 
         <button
           type="submit"
-          className="w-full py-3 mt-6 bg-gray-800 rounded-sm font-medium text-white uppercase focus:outline-none hover:bg-gray-700"
+          className={`w-full py-3 mt-6 bg-gray-800  rounded-sm font-medium text-white uppercase focus:outline-none hover:bg-gray-700 `}
+          disabled={loading}
         >
-          Login
+          {loading ? (
+          <>
+            <span className="loading loading-spinner inline-block w-4 h-4 mr-2"></span>
+            Loading...
+          </>
+        ) : (
+          'Login'
+        )}
         </button>
-
       </form>
     </div>
   );

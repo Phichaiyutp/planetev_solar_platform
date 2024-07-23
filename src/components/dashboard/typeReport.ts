@@ -1,4 +1,5 @@
 export interface Item {
+  peopleInvolved?: peopleInvolved;
   billPeriod: string;
   summaryDateForm: string;
   summaryDateTo: string;
@@ -6,11 +7,18 @@ export interface Item {
 }
 
 export interface Station {
+
   stationId: number;
   name: string;
   yield: number;
   amount: number;
   details: Details;
+}
+
+export interface peopleInvolved {
+  eng: string,
+  pm: string,
+  inspector:string,
 }
 
 export interface Details {

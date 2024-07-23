@@ -196,7 +196,7 @@ export const generatePdf = async (items: Item) => {
                   style: "header",
                 },
                 {
-                  text: "(Planetcomm Co.,Ltd.)",
+                  text: `${items.peopleInvolved?.eng}`,
                   fontSize: 18,
                   alignment: "center",
                   // background: "#ffd100",
@@ -219,7 +219,7 @@ export const generatePdf = async (items: Item) => {
                   style: "header",
                 },
                 {
-                  text: "(Planetcomm Co.,Ltd.)",
+                  text: `${items.peopleInvolved?.pm}`,
                   fontSize: 18,
                   alignment: "center",
                   // background: "#ffd100",
@@ -241,7 +241,7 @@ export const generatePdf = async (items: Item) => {
                   style: "header",
                 },
                 {
-                  text: "(C.J. Express Group Co.,Ltd.)",
+                  text: `${items.peopleInvolved?.inspector}`,
                   fontSize: 18,
                   alignment: "center",
                   // background: "#ffd100",

@@ -1,0 +1,19 @@
+services:
+  solar_api:
+    image: planetev_solar_platform:0.0.1
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command:  node server.js  
+    ports:
+      - "3000:3000"
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_HOST: 'https://platform.planet-ev.com:8443'
+      NEXT_PUBLIC_HOST_NAME: localhost
+      NEXT_PUBLIC_HOST_PORT: 3000
+      NEXT_SHARP_PATH: /tmp/node_modules/sharp
+      NEXT_PUBLIC_BASE_PATH: "/solar"
+      NEXT_PUBLIC_KEY: "SVNaxFHF2QmME7N4y@9[(>q>3_~,%]_AV{i'rGS0,a(g#p4u%{toq(_: vHe_A*o"
+      NEXT_PUBLIC_LINE_SECRET_ID: 'YW0qrZhmPJyS7mfkIT2XzqVbiYGjJlkibRpbI80Kvra'
+      NEXT_PUBLIC_LINE_CLIENT_ID: 'PCGdHEetMBmLtvfsnI9y0r'

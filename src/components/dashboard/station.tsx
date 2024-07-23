@@ -296,10 +296,10 @@ export const ExportReport = () => {
       let response;
       if (selectedStation === 'All') {
         console.log('All')
-        response = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/report/monthly/?year=${selectedYear}&month=${selectedMonth}`);
+        response = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/report/monthly?year=${selectedYear}&month=${selectedMonth}`);
       } else {
         console.log('Site')
-        response = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/report/monthly/?year=${selectedYear}&month=${selectedMonth}&station=${selectedStation}`);
+        response = await fetch(`${process.env.NEXT_PUBLIC_API_HOST}/api/report/monthly?year=${selectedYear}&month=${selectedMonth}&station=${selectedStation}`);
       }
 
       if (response.ok) {
@@ -307,7 +307,7 @@ export const ExportReport = () => {
         generatePdf(data);
       }
     } catch (error) {
-      console.error('Error exporting Excel file:', error);
+      console.error('Error exporting pdf file:', error);
     } finally {
       setDownloading(false);
     }
